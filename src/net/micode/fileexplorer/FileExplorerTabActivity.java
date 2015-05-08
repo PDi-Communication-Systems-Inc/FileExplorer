@@ -32,6 +32,13 @@ import android.preference.PreferenceManager;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.ActionMode;
+import android.view.View;
+
+import android.app.AlertDialog;
+import android.os.UserHandle;
+import android.os.Process;
+import android.os.UserManager;
+import android.content.DialogInterface;
 
 import java.util.ArrayList;
 
@@ -45,6 +52,34 @@ public class FileExplorerTabActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+	// Prevent non-owner from entering FileExplorer
+    	UserHandle uh = Process.myUserHandle();
+	Context ctx = mViewPager.getContext();
+        UserManager um = (UserManager) ctx.getSystemService(Context.USER_SERVICE);
+        if(null != um)
+        {
+            long userSerialNumber = um.getSerialNumberForUser(uh);
+            if (userSerialNumber != 0) {
+            	new AlertDialog.Builder(this)
+                .setTitle("Accessing a Restricted App")
+                .setMessage("You cannot access this app as a restricted user")
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) { 
+                        // continue with delete
+                    	finish();
+                    }
+                 })
+                .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) { 
+                        // do nothing
+                    	finish();
+                    }
+                 })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();            	
+            }
+        }
 
         setContentView(R.layout.fragment_pager);
         mViewPager = (ViewPager) findViewById(R.id.pager);
