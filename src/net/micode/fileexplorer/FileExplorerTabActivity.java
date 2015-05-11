@@ -55,7 +55,7 @@ public class FileExplorerTabActivity extends Activity {
 
 	// Prevent non-owner from entering FileExplorer
     	UserHandle uh = Process.myUserHandle();
-	Context ctx = mViewPager.getContext();
+	Context ctx = getApplicationContext();
         UserManager um = (UserManager) ctx.getSystemService(Context.USER_SERVICE);
         if(null != um)
         {
