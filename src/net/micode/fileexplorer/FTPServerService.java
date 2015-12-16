@@ -20,11 +20,14 @@ along with SwiFTP.  If not, see <http://www.gnu.org/licenses/>.
 package net.micode.fileexplorer;
 
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 import android.app.Notification;
@@ -254,10 +257,19 @@ public class FTPServerService extends Service implements Runnable {
         // Define Notification's message and Intent
         CharSequence contentTitle = getString(R.string.notif_title);
         CharSequence contentText = "";
+        String ipAddress = null;
+
         InetAddress address = FTPServerService.getWifiIp();
         if (address != null) {
             String port = ":" + FTPServerService.getPort();
             contentText = "ftp://" + address.getHostAddress() + (FTPServerService.getPort() == 21 ? "" : port);
+        } else if(address == null) {
+
+            ipAddress = FTPServerService.getEthernetIp();
+            if (ipAddress != null) {
+                String port = ":" + FTPServerService.getPort();
+                contentText = "ftp://" + ipAddress + (FTPServerService.getPort() == 21 ? "" : port);
+            }
         }
 
         Intent notificationIntent = new Intent(this, FileExplorerTabActivity.class);
@@ -506,6 +518,42 @@ public class FTPServerService extends Service implements Runnable {
     }
 
     /**
+     * Gets the IP address of the Ethernet connection.
+     *
+     * @return The integer IP address if Ethernet is enabled, or null if not.
+     */
+    public static String getEthernetIp() {
+        Context myContext = Globals.getContext();
+        String ipAddress = null;
+
+        if (myContext == null) {
+            throw new NullPointerException("Global context is null");
+        }
+
+        try {
+            String interfaceName = "eth0";
+            NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
+            Enumeration<InetAddress> inetAddress = networkInterface.getInetAddresses();
+            InetAddress currentAddress;
+            currentAddress = inetAddress.nextElement();
+            while (inetAddress.hasMoreElements()) {
+                currentAddress = inetAddress.nextElement();
+                if (currentAddress instanceof Inet4Address && !currentAddress.isLoopbackAddress()) {
+                    ipAddress = currentAddress.toString();
+                    //substring(1) as the ipAddress returned contains '/'
+                    ipAddress = ipAddress.substring(1);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ipAddress;
+
+    }
+
+
+    /**
      * Gets the IP address of the wifi connection.
      *
      * @return The integer IP address if wifi enabled, or null if not.
@@ -529,6 +577,7 @@ public class FTPServerService extends Service implements Runnable {
     }
 
     public static boolean isWifiEnabled() {
+
         Context myContext = Globals.getContext();
         if (myContext == null) {
             throw new NullPointerException("Global context is null");

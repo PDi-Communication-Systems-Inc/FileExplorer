@@ -188,11 +188,30 @@ public class ServerControlActivity extends Fragment implements IBackPressedListe
         int wifiState = wifiMgr.getWifiState();
         WifiInfo info = wifiMgr.getConnectionInfo();
         String wifiId = info != null ? info.getSSID() : null;
-        boolean isWifiReady = FTPServerService.isWifiEnabled();
+        String ipAddress = null;
+        boolean isEthernetReady = false;
 
-        setText(R.id.wifi_state, isWifiReady ? wifiId : getString(R.string.no_wifi_hint));
-        ImageView wifiImg = (ImageView) mRootView.findViewById(R.id.wifi_state_image);
-        wifiImg.setImageResource(isWifiReady ? R.drawable.wifi_state4 : R.drawable.wifi_state0);
+        boolean isWifiReady = FTPServerService.isWifiEnabled();
+        if(!isWifiReady) {
+            ipAddress = FTPServerService.getEthernetIp();
+            if(ipAddress != null) {
+                isWifiReady =  true;
+                isEthernetReady = true;
+            }
+        }
+
+        // add ethernet port icon here
+        if(isEthernetReady) {
+            setText(R.id.wifi_state, getString(R.string.eth_connected));
+            ImageView wifiImg = (ImageView) mRootView.findViewById(R.id.wifi_state_image);
+            wifiImg.setImageResource(R.drawable.ethernet_image);
+
+        } else {
+            setText(R.id.wifi_state, isWifiReady ? wifiId : getString(R.string.no_wifi_hint));
+            ImageView wifiImg = (ImageView) mRootView.findViewById(R.id.wifi_state_image);
+            wifiImg.setImageResource(isWifiReady ? R.drawable.wifi_state4 : R.drawable.wifi_state0);
+
+        }
 
         boolean running = FTPServerService.isRunning();
         if (running) {
@@ -200,11 +219,17 @@ public class ServerControlActivity extends Fragment implements IBackPressedListe
             // Put correct text in start/stop button
             // Fill in wifi status and address
             InetAddress address = FTPServerService.getWifiIp();
+
             if (address != null) {
                 String port = ":" + FTPServerService.getPort();
                 ipText.setText("ftp://" + address.getHostAddress() + (FTPServerService.getPort() == 21 ? "" : port));
-
+            } else if(address == null) {
+                if (ipAddress != null) {
+                    String port = ":" + FTPServerService.getPort();
+                    ipText.setText("ftp://" + ipAddress + (FTPServerService.getPort() == 21 ? "" : port));
+                }
             } else {
+
                 // could not get IP address, stop the service
                 Context context = mActivity.getApplicationContext();
                 Intent intent = new Intent(context, FTPServerService.class);
@@ -215,7 +240,7 @@ public class ServerControlActivity extends Fragment implements IBackPressedListe
 
         startStopButton.setEnabled(isWifiReady);
         TextView startStopButtonText = (TextView) mRootView.findViewById(R.id.start_stop_button_text);
-        if (isWifiReady) {
+        if (isWifiReady || isEthernetReady) {
             startStopButtonText.setText(running ? R.string.stop_server : R.string.start_server);
             startStopButtonText.setCompoundDrawablesWithIntrinsicBounds(running ? R.drawable.disconnect
                     : R.drawable.connect, 0, 0, 0);

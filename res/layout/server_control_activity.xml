@@ -27,12 +27,14 @@
             android:singleLine="true"
             android:padding="5px"
             style="?android:attr/textAppearanceSmall"/>
+
         <ImageView
             android:id="@+id/wifi_state_image"
             android:src="@drawable/wifi_state4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal" />
+
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
