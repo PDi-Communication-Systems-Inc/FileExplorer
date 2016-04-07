@@ -17,6 +17,7 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := android.support.v13.app:libs/android-sup
 LOCAL_PACKAGE_NAME := net.micode.fileexplorer
 
 include $(BUILD_PACKAGE)
+include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := android.support.v13:libs/android-support-v13.jar
 
